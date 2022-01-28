@@ -1,8 +1,22 @@
 from io import StringIO
 import re
+import logging
+from app.helpers.structlog import config_structlog, common_handler
+import structlog
 from flask import Flask, jsonify, request, Response
 from app.models.value_sets import *
 from app.models.surveys import *
+
+
+# Configure the logger when the application is imported. This ensures that
+# everything below uses the same configured logger.
+config_structlog()
+logger = structlog.getLogger()
+
+# This configures _all other loggers_ including every dependent module that
+# has logging implemented to have the format defined in the helper module.
+root_logger = logging.getLogger().root
+root_logger.addHandler(common_handler)
 
 app = Flask(__name__)
 app.config['MOCK_DB'] = False
