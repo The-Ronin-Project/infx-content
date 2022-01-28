@@ -8,6 +8,7 @@ image:
 
 deployment:
   replicas: 3
+  backend_port: 5000
 
 resources:
   requests:
