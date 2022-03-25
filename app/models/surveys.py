@@ -250,7 +250,8 @@ class SurveyExporter:
             "details": '',
             "topbraid_uri": x.question_uuid,
             "symptom_selection": 1,
-            "survey_name": None
+            "survey_name": None,
+            "question_group_uuid": x.question_group_uuid
             }
         
         return {
@@ -272,5 +273,6 @@ class SurveyExporter:
             "details": '',
             "topbraid_uri": x.question_uuid,
             "symptom_selection": 1 if x.question_uuid == '7fc52db1-9ae8-4535-9463-c75ebc7398ca' else 0,
-            "survey_name": None
+            "survey_name": None,
+            "question_group_uuid": x.question_group_uuid
         }
