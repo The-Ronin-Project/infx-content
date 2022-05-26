@@ -1,5 +1,6 @@
 from flask import current_app, g
 from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 from elasticsearch import Elasticsearch
 from decouple import config
 
@@ -18,7 +19,11 @@ def get_db():
             g.db.execute("attach database 'tests/dbs/loinc.db' as loinc")
             g.db.execute("attach database 'tests/dbs/organizations.db' as organizations")
         else:
-            engine = create_engine(f"postgresql://{config('DATABASE_USER')}@{config('DATABASE_HOST')}:{config('DATABASE_PASSWORD')}@{config('DATABASE_HOST')}/{config('DATABASE_NAME')}", connect_args={'sslmode':'require'})
+            engine = create_engine(
+                f"postgresql://{config('DATABASE_USER')}@{config('DATABASE_HOST')}:{config('DATABASE_PASSWORD')}@{config('DATABASE_HOST')}/{config('DATABASE_NAME')}", 
+                connect_args={'sslmode':'require'},
+                poolclass=NullPool
+                )
             g.db = engine.connect()
     return g.db
 
