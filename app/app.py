@@ -11,7 +11,7 @@ from decouple import config
 from app.models.value_sets import *
 from app.models.concept_maps import *
 from app.models.surveys import *
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException 
 
 # Configure the logger when the application is imported. This ensures that
 # everything below uses the same configured logger.
@@ -44,19 +44,19 @@ def create_app(script_info=None):
     
     # Value Set Endpoints
     # FHIR endpoint
-    @app.route('/ValueSet/<string:uuid>/$expand')
+    @app.route('/ValueSet/<string:uuid>/$expand') #tricky, needs to be split up
     def expand_value_set(uuid):
         force_new = request.values.get('force_new') == 'true'
         vs_version = ValueSetVersion.load(uuid)
         vs_version.expand(force_new=force_new)
         return jsonify(vs_version.serialize())
 
-    @app.route('/ValueSets/')
+    @app.route('/ValueSets/') #READ ONLY - stays
     def get_all_value_sets_metadata():
         active_only = False if request.values.get('active_only') == 'false' else True
         return jsonify(ValueSet.load_all_value_set_metadata(active_only))
 
-    @app.route('/ValueSets/all/')
+    @app.route('/ValueSets/all/') #READ ONLY - stays
     def get_all_value_sets():
         status = request.values.get('status').split(',')
         value_sets = ValueSet.load_all_value_sets_by_status(status)
@@ -64,59 +64,22 @@ def create_app(script_info=None):
         serialized = [x.serialize() for x in value_sets]
         return jsonify(serialized)
 
-    @app.route('/ValueSets/<string:identifier>/versions/')
+    @app.route('/ValueSets/<string:identifier>/versions/') #READ ONLY - stays
     def get_value_set_versions(identifier):
         uuid = ValueSet.name_to_uuid(identifier)
         return jsonify(ValueSet.load_version_metadata(uuid))
 
-    @app.route('/ValueSets/<string:identifier>/versions/new', methods=['POST'])
-    def create_new_vs_version(identifier):
-        value_set = ValueSet.load(identifier)
-        effective_start = request.json.get('effective_start')
-        effective_end = request.json.get('effective_end')
-        description = request.json.get('description')
-        new_version_uuid = value_set.create_new_version(effective_start, effective_end, description)
-        return str(new_version_uuid), 201
 
-    @app.route('/ValueSets/<string:value_set_uuid>/versions/<string:vs_version_uuid>', methods=['DELETE'])
-    def delete_vs_version(value_set_uuid, vs_version_uuid):
-        vs_version = ValueSetVersion.load(vs_version_uuid)
-        if str(vs_version.value_set.uuid) != str(value_set_uuid):
-            raise BadRequest(f"{vs_version_uuid} is not a version of value set with uuid {value_set_uuid}")
-        vs_version.delete()
-        return "Deleted", 200
-
-    @app.route('/ValueSets/<string:identifier>/most_recent_active_version')
+    @app.route('/ValueSets/<string:identifier>/most_recent_active_version') #READ ONLY - stays (load_most_recent_active_version is a query)
     def get_most_recent_version(identifier):
         uuid = ValueSet.name_to_uuid(identifier)
         version = ValueSet.load_most_recent_active_version(uuid)
         version.expand()
         return jsonify(version.serialize())
 
-    @app.route('/ValueSets/expansions/<string:expansion_uuid>/report')
-    def load_expansion_report(expansion_uuid):
-        report = ValueSetVersion.load_expansion_report(expansion_uuid)
-        file_buffer = StringIO()
-        file_buffer.write(report)
-        file_buffer.seek(0)
-        response = Response(
-            file_buffer,
-            mimetype="text/plain",
-            headers={
-            "Content-Disposition": f"attachment; filename={expansion_uuid}-report.csv"
-            }
-        )
-        return response
-
-    @app.route('/ValueSets/rule_set/execute', methods=['POST'])
-    def process_rule_set():
-        """ Allows for the real-time execution of rules, used on the front-end to preview output of a rule set"""
-        rules_input = request.get_json()
-        result = execute_rules(rules_input)
-        return jsonify(result)
 
     # Survey Endpoints
-    @app.route('/surveys/<string:survey_uuid>')
+    @app.route('/surveys/<string:survey_uuid>')  #READ ONLY - stays
     def export_survey(survey_uuid):
         organization_uuid = request.values.get("organization_uuid")
         # print(survey_uuid, organization_uuid)
@@ -133,8 +96,8 @@ def create_app(script_info=None):
             })
         return response
 
-    # Concept Map Endpoints
-    @app.route('/ConceptMaps/<string:version_uuid>')
+    # Concept Map Endpoints 
+    @app.route('/ConceptMaps/<string:version_uuid>') #READ ONLY - stays
     def get_concept_map_version(version_uuid):
         concept_map_version = ConceptMapVersion(version_uuid)
         return jsonify(concept_map_version.serialize())
