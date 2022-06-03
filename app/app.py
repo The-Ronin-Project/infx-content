@@ -46,9 +46,9 @@ def create_app(script_info=None):
     # FHIR endpoint
     @app.route('/ValueSet/<string:uuid>/$expand') #tricky, needs to be split up
     def expand_value_set(uuid):
-        force_new = request.values.get('force_new') == 'true'
+        #force_new = request.values.get('force_new') == 'true'
         vs_version = ValueSetVersion.load(uuid)
-        vs_version.expand(force_new=force_new)
+        vs_version.expand()
         return jsonify(vs_version.serialize())
 
     @app.route('/ValueSets/') #READ ONLY - stays

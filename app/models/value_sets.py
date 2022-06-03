@@ -1003,65 +1003,64 @@ class ValueSet:
       raise BadRequest(f'No active published version of ValueSet with UUID: {uuid}')
     return ValueSetVersion.load(recent_version.uuid)
 
-  def create_new_version(self, effective_start, effective_end, description):
-    """
-    This will identify the most recent version of the value set and clone it, incrementing the version by 1, to create a new version
-    """
-    conn = get_db()
-    most_recent_vs_version = conn.execute(
-      text(
-        """
-        select * from value_sets.value_set_version
-        where value_set_uuid=:value_set_uuid
-        order by version desc
-        """
-      ), {
-        'value_set_uuid': self.uuid
-      }
-    ).first()
-
+ # def create_new_version(self, effective_start, effective_end, description):
+ #  """
+ #   This will identify the most recent version of the value set and clone it, incrementing the version by 1, to create a new version
+ #   """
+ #   conn = get_db()
+ #   most_recent_vs_version = conn.execute(
+ #     text(
+ #       """
+ #       select * from value_sets.value_set_version
+ #       where value_set_uuid=:value_set_uuid
+ #       order by version desc
+ #       """
+ #     ), {
+ #       'value_set_uuid': self.uuid
+ #     }
+ #   ).first()
+ #
     # Create new version
-    new_version_uuid = uuid.uuid4()
-    conn.execute(
-      text(
-        """
-        insert into value_sets.value_set_version
-        (uuid, effective_start, effective_end, value_set_uuid, status, description, created_date, version)
-        values
-        (:new_version_uuid, :effective_start, :effective_end, :value_set_uuid, :status, :description, :created_date, :version)
-        """
-      ), {
-        'new_version_uuid': str(new_version_uuid),
-        'effective_start': effective_start,
-        'effective_end': effective_end,
-        'value_set_uuid': self.uuid,
-        'status': 'pending',
-        'description': description,
-        'created_date': datetime.now(),
-        'version': most_recent_vs_version.version + 1
-      }
-    )
-
+ #   new_version_uuid = uuid.uuid4()
+ #   conn.execute(
+ #     text(
+ #       """
+ #       insert into value_sets.value_set_version
+ #       (uuid, effective_start, effective_end, value_set_uuid, status, description, created_date, version)
+ #       values
+ #       (:new_version_uuid, :effective_start, :effective_end, :value_set_uuid, :status, :description, :created_date, :version)
+ #       """
+ #     ), {
+ #       'new_version_uuid': str(new_version_uuid),
+ #       'effective_start': effective_start,
+ #       'effective_end': effective_end,
+ #       'value_set_uuid': self.uuid,
+ #       'status': 'pending',
+ #       'description': description,
+ #       'created_date': datetime.now(),
+ #       'version': most_recent_vs_version.version + 1
+ #     }
+ #   )
+ #
     # Copy rules from previous version to new version
-    if current_app.config['MOCK_DB'] is False:
-      conn.execute(
-        text(
-          """
-          insert into value_sets.value_set_rule
-          (position, description, property, operator, value, include, terminology_version, value_set_version)
-          select position, description, property, operator, value, include, terminology_version, :new_version_uuid
-          from value_sets.value_set_rule
-          where value_set_version = :previous_version_uuid
-          """
-        ), {
-          'previous_version_uuid': str(most_recent_vs_version.uuid),
-          'new_version_uuid': str(new_version_uuid)
-        }
-      )
-
-    return new_version_uuid
+ #   if current_app.config['MOCK_DB'] is False:
+ #     conn.execute(
+ #       text(
+ #         """
+ #         insert into value_sets.value_set_rule
+ #         (position, description, property, operator, value, include, terminology_version, value_set_version)
+ #         select position, description, property, operator, value, include, terminology_version, :new_version_uuid
+ #         from value_sets.value_set_rule
+ #         where value_set_version = :previous_version_uuid
+ #         """
+ #       ), {
+ #         'previous_version_uuid': str(most_recent_vs_version.uuid),
+ #         'new_version_uuid': str(new_version_uuid)
+ #       }
+ #     )
+ #
+ #   return new_version_uuid
         
-
 class RuleGroup:
   def __init__(self, vs_version_uuid, rule_group_id):
     self.vs_version_uuid = vs_version_uuid
@@ -1309,13 +1308,10 @@ class ValueSetVersion:
     self.rule_groups = [RuleGroup(self.uuid, x) for x in rule_group_ids]
 
   def expand(self, force_new=False):
-    if force_new is True:
-      return self.create_expansion()
-
+    #if force_new is True:
+      #return self.create_expansion()
     if self.expansion_already_exists():
       return self.load_current_expansion()
-    else:
-      return self.create_expansion()
 
   def expansion_already_exists(self):
     conn = get_db()
@@ -1368,49 +1364,49 @@ class ValueSetVersion:
         )
       )
 
-  def save_expansion(self, report=None):
-    conn = get_db()
-    self.expansion_uuid = uuid.uuid1()
+ # def save_expansion(self, report=None):
+ #   conn = get_db()
+ #   self.expansion_uuid = uuid.uuid1()
+ #
+ # Create a new expansion entry in the value_sets.expansion table
+ #   current_time_string = datetime.now() # + timedelta(days=1) # Must explicitly create this, since SQLite can't use now()
+ #   self.expansion_timestamp = current_time_string
+ #   conn.execute(text(
+ #     """
+ #     insert into value_sets.expansion
+ #     (uuid, vs_version_uuid, timestamp, report)
+ #     values
+ #     (:expansion_uuid, :version_uuid, :curr_time, :report)
+ #     """
+ #   ), {
+ #     'expansion_uuid': str(self.expansion_uuid),
+ #     'version_uuid': str(self.uuid),
+ #     'report': report,
+ #     'curr_time': current_time_string
+ #   })
+ #
+ #   if self.expansion:
+ #     conn.execute(expansion_member.insert(), [{
+ #       'expansion_uuid': str(self.expansion_uuid),
+ #       'code': code.code,
+ #       'display': code.display,
+ #       'system': code.system,
+ #       'version': code.version
+ #     } for code in self.expansion])
 
-    # Create a new expansion entry in the value_sets.expansion table
-    current_time_string = datetime.now() # + timedelta(days=1) # Must explicitly create this, since SQLite can't use now()
-    self.expansion_timestamp = current_time_string
-    conn.execute(text(
-      """
-      insert into value_sets.expansion
-      (uuid, vs_version_uuid, timestamp, report)
-      values
-      (:expansion_uuid, :version_uuid, :curr_time, :report)
-      """
-    ), {
-      'expansion_uuid': str(self.expansion_uuid),
-      'version_uuid': str(self.uuid),
-      'report': report,
-      'curr_time': current_time_string
-    })
-
-    if self.expansion:
-      conn.execute(expansion_member.insert(), [{
-        'expansion_uuid': str(self.expansion_uuid),
-        'code': code.code,
-        'display': code.display,
-        'system': code.system,
-        'version': code.version
-      } for code in self.expansion])
-
-  def create_expansion(self):
-    self.expansion = set()
-    expansion_report_combined = ""
-
-    for rule_group in self.rule_groups:
-      expansion, expansion_report = rule_group.generate_expansion()
-      self.expansion = self.expansion.union(expansion)
-      expansion_report_combined += expansion_report
-
-    self.process_mapping_inclusions()
-
-    if self.value_set.type == 'intensional':
-      self.save_expansion(report=expansion_report_combined)
+#  def create_expansion(self):
+#    self.expansion = set()
+#    expansion_report_combined = ""
+#
+#    for rule_group in self.rule_groups:
+#      expansion, expansion_report = rule_group.generate_expansion()
+#      self.expansion = self.expansion.union(expansion)
+#      expansion_report_combined += expansion_report
+#
+#    self.process_mapping_inclusions()
+#
+#    if self.value_set.type == 'intensional':
+#      self.save_expansion(report=expansion_report_combined)
 
   def parse_mapping_inclusion_retool_array(self, retool_array):
     array_string_copy = retool_array
@@ -1473,65 +1469,6 @@ class ValueSetVersion:
     )
     result = last_modified_query.first()
     return result.timestamp
-
-  def delete(self):
-    """
-    Deleting a value set version is only allowed if it was only in draft status and never published--typically if it was created in error.
-    Once a value set version has been published, it must be kept indefinitely.
-    """
-    # Make sure value set is eligible for deletion
-    if self.status != 'pending':
-      raise BadRequest('ValueSet version is not eligible for deletion because its status is not `pending`')
-
-    # Identify any expansions, delete their contents, then delete the expansions themselves
-    conn = get_db()
-    conn.execute(
-      text(
-        """
-        delete from value_sets.expansion_member
-        where expansion_uuid in
-        (select expansion_uuid from value_sets.expansion
-        where vs_version_uuid=:vs_version_uuid)
-        """
-      ), {
-        'vs_version_uuid': self.uuid
-      }
-    )
-
-    conn.execute(
-      text(
-        """
-        delete from value_sets.expansion
-        where vs_version_uuid=:vs_version_uuid
-        """
-      ), {
-        'vs_version_uuid': self.uuid
-      }
-    )
-
-    # Delete associated rules for value set version
-    conn.execute(
-      text(
-        """
-        delete from value_sets.value_set_rule
-        where value_set_version=:vs_version_uuid
-        """
-      ), {
-        'vs_version_uuid': self.uuid
-      }
-    )
-
-    # Delete value set version
-    conn.execute(
-      text(
-        """
-        delete from value_sets.value_set_version
-        where uuid=:vs_version_uuid
-        """
-      ), {
-        'vs_version_uuid': self.uuid
-      }
-    )
 
   def serialize_include(self):
     if self.value_set.type == 'extensional':
