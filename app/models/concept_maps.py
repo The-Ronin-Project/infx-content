@@ -1,6 +1,6 @@
 from elasticsearch import TransportError
 from numpy import source
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 import app.models.terminologies
 import app.models.codes
 from app.database import get_db
@@ -108,6 +108,38 @@ class ConceptMap:
         self.author = data.author
         self.created_date = data.created_date
 
+    @classmethod
+    def load_all_versions_metadata(cls):
+        """
+        This function will return metadata for all concept map versions
+        """
+        conn = get_db()
+        query = text(
+            """
+            select cmv.uuid as version_uuid, cmv.description as version_description, cm.description as concept_map_description, * 
+            from concept_maps.concept_map_version cmv
+            join concept_maps.concept_map cm on cmv.concept_map_uuid=cm.uuid
+            """
+        )
+        results = conn.execute(query)
+        response = []
+        for result in results:
+            response.append({
+                'concept_map_uuid': result.concept_map_uuid,
+                'concept_map_version_uuid': result.version_uuid,
+                'version_description': result.version_description,
+                'concept_map_description': result.concept_map_description,
+                'comments': result.comments,
+                'status': result.status,
+                'effective_start': result.effective_start,
+                'effective_end': result.effective_end,
+                'version': result.version,
+                'title': result.title,
+                'author': result.author,
+                'purpose': result.purpose,
+            })
+
+        return response
 
 class ConceptMapVersion:
     def __init__(self, uuid):

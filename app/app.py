@@ -139,6 +139,11 @@ def create_app(script_info=None):
         concept_map_version = ConceptMapVersion(version_uuid)
         return jsonify(concept_map_version.serialize())
 
+    @app.route('/ConceptMaps/all/')
+    def load_all_concept_maps():
+        metadata = ConceptMap.load_all_versions_metadata()
+        return jsonify(metadata)
+
     return app
 
 
