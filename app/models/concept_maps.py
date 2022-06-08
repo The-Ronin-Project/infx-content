@@ -284,7 +284,8 @@ class ConceptMapVersion:
             'effective_start': self.effective_start,
             'effective_end': self.effective_end,
             'version': self.version,
-            'group': self.serialize_mappings()
+            'group': self.serialize_mappings(),
+            'resourceType' : 'ConceptMap',
             # For now, we are intentionally leaving out created_dates as they are not part of the FHIR spec and not required for our use cases at this time
         }
 
