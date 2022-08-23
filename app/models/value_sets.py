@@ -18,7 +18,7 @@ from app.database import get_db, get_elasticsearch
 from flask import current_app
 import pandas as pd
 import numpy as np
-from pandas import json_normalize
+from pandas import json_normalize, value_counts
 
 ECL_SERVER_PATH = "https://snowstorm.prod.projectronin.io"
 SNOSTORM_LIMIT = 500
@@ -101,6 +101,8 @@ class VSRule:
       self.rxnorm_relationship_type()
     if self.property == 'term_type_within_class':
       self.term_type_within_class()
+    if self.property == 'term_type':
+      self.get_all_concepts_by_term_type()
 
     # SNOMED
     if self.property == 'ecl':
@@ -450,6 +452,7 @@ class RxNormRule(VSRule):
 
     self.results = set(final_rxnorm_codes)
 
+
   def rxnorm_source(self):
     conn = get_db()
     query = text("""
@@ -524,6 +527,23 @@ class RxNormRule(VSRule):
 
     results = [Code(self.fhir_system, self.terminology_version.version, x.rxcui, x.str) for x in results_data]
     self.results = set(results)
+
+  def get_rxnorm_version():
+    version = requests.get(f'{RXNORM_BASE_URL}version.json')
+    return version.json()
+
+  def get_all_concepts_by_term_type(self):
+    if type(self.value) != dict: 
+      json_value = json.loads(self.value)
+    else:
+      json_value = self.value
+    term_type = json_value.get('term_type')
+    payload = {'tty': term_type}
+    active_concepts_by_TTY_request = requests.get(f'{RXNORM_BASE_URL}allconcepts.json?', params=payload)
+    results = active_concepts_by_TTY_request.json()
+    results_list = results.get("minConceptGroup").get("minConcept")
+    final_results = [Code(self.fhir_system, self.terminology_version.version, x.get("rxcui"), x.get("name")) for x in results_list]
+    self.results = set(final_results)     
 
 class LOINCRule(VSRule):
 

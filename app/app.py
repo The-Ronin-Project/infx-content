@@ -12,6 +12,7 @@ from app.models.value_sets import *
 from app.models.concept_maps import *
 from app.models.surveys import *
 from werkzeug.exceptions import HTTPException
+import sys
 
 # Configure the logger when the application is imported. This ensures that
 # everything below uses the same configured logger.
@@ -143,6 +144,12 @@ def create_app(script_info=None):
     def load_all_concept_maps():
         metadata = ConceptMap.load_all_versions_metadata()
         return jsonify(metadata)
+
+    @app.route('/RxNormTermTypeConcepts', methods=['GET','POST'])
+    def concepts_by_term_type():
+        term_type = request.json.get('term_type')
+        test = RxNormTermTypeRule.get_all_concepts_by_term_type(term_type)
+        return test
 
     return app
 
