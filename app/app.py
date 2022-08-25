@@ -145,12 +145,6 @@ def create_app(script_info=None):
         metadata = ConceptMap.load_all_versions_metadata()
         return jsonify(metadata)
 
-    @app.route('/RxNormTermTypeConcepts', methods=['GET','POST'])
-    def concepts_by_term_type():
-        term_type = request.json.get('term_type')
-        test = RxNormTermTypeRule.get_all_concepts_by_term_type(term_type)
-        return test
-
     return app
 
 

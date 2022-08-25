@@ -451,10 +451,6 @@ class RxNormRule(VSRule):
         final_rxnorm_codes.append(Code(self.fhir_system, self.terminology_version.version, code, display))
 
     self.results = set(final_rxnorm_codes)
-    
-  def get_rxnorm_version():
-    version = requests.get(f'{RXNORM_BASE_URL}version.json')
-    return version.json()
 
   def get_all_concepts_by_term_type(self):
     if type(self.value) != dict: 
