@@ -32,14 +32,10 @@ class DeprecatedConceptMap:
                 # 'relationship_codes': self.relationship_types
             }
         )
-        source_system = None
-        source_version = None
-        target_system = None
-        target_version = None
         self.mappings = [
             (
-                app.models.codes.Code(source_system, source_version, x.sourceConceptCode, x.sourceConceptDisplay),
-                app.models.codes.Code(target_system, target_version, x.targetConceptCode, x.targetConceptDisplay),
+                app.models.codes.Code(x.sourceTerminologyCodeSystem, x.sourceTerminologyRelease, x.sourceConceptCode, x.sourceConceptDisplay),
+                app.models.codes.Code(x.targetTerminologyCodeSystem, x.targetTerminologyRelease, x.targetConceptCode, x.targetConceptDisplay),
                 x.relationshipCode
             ) for x in mapping_query
         ]
