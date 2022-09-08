@@ -230,7 +230,7 @@ class SurveyExporter:
 
     def generate_row(self, x, index):
 
-        if str(x.question_uuid) == '7fc52db1-9ae8-4535-9463-c75ebc7398ca': # Select Symptoms Question
+        if str(x.question_uuid) == '7fc52db1-9ae8-4535-9463-c75ebc7398ca' or str(x.question_uuid) == '54deecbb-cba0-4fd8-9e10-666f3951f4cb': # Select Symptoms Question
             return {
             "slug": x.question_uuid,
             "category": "Symptoms",
