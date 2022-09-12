@@ -205,7 +205,7 @@ class SurveyExporter:
         last_qg_pos = None
 
         for x in self.survey_data:
-            if str(x.question_uuid) == '7fc52db1-9ae8-4535-9463-c75ebc7398ca':
+            if str(x.question_uuid) == '7fc52db1-9ae8-4535-9463-c75ebc7398ca' or str(x.question_uuid) == '54deecbb-cba0-4fd8-9e10-666f3951f4cb':
                 after_symptom_select = True
                 continue
 
@@ -231,6 +231,7 @@ class SurveyExporter:
     def generate_row(self, x, index):
 
         if str(x.question_uuid) == '7fc52db1-9ae8-4535-9463-c75ebc7398ca' or str(x.question_uuid) == '54deecbb-cba0-4fd8-9e10-666f3951f4cb': # Select Symptoms Question
+            print(self.get_first_question_for_each_symptom_after_symptom_select())
             return {
             "slug": x.question_uuid,
             "category": "Symptoms",
