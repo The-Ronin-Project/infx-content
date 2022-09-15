@@ -1589,7 +1589,7 @@ class ValueSetVersion:
         "timestamp": self.expansion_timestamp.strftime("%Y-%m-%d") if self.expansion_timestamp is not None else None
       },
       "compose": {
-        "include": self.serialize_include()
+        # "include": self.serialize_include()
       },
       "resourceType": "ValueSet",
       "additionalData": {  # Place to put custom values that aren't part of the FHIR spec
@@ -1613,9 +1613,9 @@ class ValueSetVersion:
         # expansion UUID derived from a hash of when timestamp was last updated and the UUID of the ValueSets terminology version from `public.terminology_versions`
         serialized['additionalData']['expansion_uuid'] = uuid.uuid3(namespace=uuid.UUID('{e3dbd59c-aa26-11ec-b909-0242ac120002}'), name=str(self.extensional_vs_time_last_modified()))
 
-    serialized_exclude = self.serialize_exclude()
-    if serialized_exclude:
-      serialized['compose']['exclude'] = serialized_exclude
+    # serialized_exclude = self.serialize_exclude()
+    # if serialized_exclude:
+    #   serialized['compose']['exclude'] = serialized_exclude
 
     # if self.value_set.type == 'extensional': serialized.pop('expansion')
 
