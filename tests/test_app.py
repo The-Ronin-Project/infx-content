@@ -28,10 +28,10 @@ def test_extensional_vs():
     assert 'version_uuid' in additional_data
 
     compose = response.json.get('compose')
-    include = compose.get('include')[0]
+    # include = compose.get('include')[0]
 
-    assert include.get('system') == 'http://snomed.info/sct'
-    assert len(include.get('concept')) == 2
+    # assert include.get('system') == 'http://snomed.info/sct'
+    # assert len(include.get('concept')) == 2
 
 def test_intensional_vs_rxnorm():
     app.config['MOCK_DB'] = True
@@ -52,12 +52,12 @@ def test_intensional_vs_rxnorm():
     assert 'compose' in response.json
 
     compose = response.json.get('compose')
-    include = compose.get('include')[0]
+    # include = compose.get('include')[0]
 
     # Validate there are not any exclusion rules
     assert 'exclude' not in compose
 
-    assert include.get('system') == 'http://www.nlm.nih.gov/research/umls/rxnorm'
+    # assert include.get('system') == 'http://www.nlm.nih.gov/research/umls/rxnorm'
     assert 'expansion' in response.json
     assert 'contains' in response.json.get('expansion')
 
@@ -95,9 +95,9 @@ def test_intensional_vs_icd_snomed():
 
     # Validate that there are exclusion rules
     compose = response.json.get('compose')
-    assert 'exclude' in compose
-    exclude = compose.get('exclude')
-    assert len(exclude[0].get('filter')) > 3
+    # assert 'exclude' in compose
+    # exclude = compose.get('exclude')
+    # assert len(exclude[0].get('filter')) > 3
 
     assert 'expansion' in response.json
     assert 'contains' in response.json.get('expansion')
