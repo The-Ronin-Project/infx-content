@@ -18,7 +18,7 @@ from app.database import get_db, get_elasticsearch
 from flask import current_app
 import pandas as pd
 import numpy as np
-from pandas import json_normalize
+from pandas import json_normalize, value_counts
 
 ECL_SERVER_PATH = "https://snowstorm.prod.projectronin.io"
 SNOSTORM_LIMIT = 500
@@ -101,6 +101,8 @@ class VSRule:
       self.rxnorm_relationship_type()
     if self.property == 'term_type_within_class':
       self.term_type_within_class()
+    if self.property == 'term_type':
+      self.get_all_concepts_by_term_type()
 
     # SNOMED
     if self.property == 'ecl':
@@ -450,80 +452,18 @@ class RxNormRule(VSRule):
 
     self.results = set(final_rxnorm_codes)
 
-  def rxnorm_source(self):
-    conn = get_db()
-    query = text("""
-      Select RXCUI, str from "rxnormDirty".rxnconso where SAB = 'RXNORM' and TTY <> 'SY' 
-      and RXCUI in (select RXCUI from "rxnormDirty".rxnconso where SAB in :value)
-    """).bindparams(bindparam('value', expanding=True))
-
-    value = self.value.split(',')
-
-    results_data = conn.execute(query, {
-      'value': value
-    })
-
-    results = [Code(self.fhir_system, self.terminology_version.version, x.rxcui, x.str) for x in results_data]
-    self.results = set(results)
-
-  def rxnorm_term_type(self):
-    conn = get_db()
-    query = text("""
-      Select RXCUI, str from "rxnormDirty".rxnconso where SAB = 'RXNORM' and TTY <> 'SY' 
-      and TTY in :value
-    """).bindparams(bindparam('value', expanding=True))
-
-    value = self.value.split(',')
-
-    results_data = conn.execute(query, {
-      'value': value
-    })
-
-    results = [Code(self.fhir_system, self.terminology_version.version, x.rxcui, x.str) for x in results_data]
-    self.results = set(results)
-
-
-  def rxnorm_relationship(self):
-    conn = get_db()
-    if self.value[:4] == 'CUI:':
-      query = text(""" Select RXCUI, STR from "rxnormDirty".rxnconso where SAB = 'RXNORM' and TTY <> 'SY'  
-      and (RXCUI in (select RXCUI from "rxnormDirty".rxnconso where RXCUI in (select RXCUI1 from "rxnormDirty".rxnrel where REL = :rel and RXCUI2 in :value)))""") 
+  def get_all_concepts_by_term_type(self):
+    if type(self.value) != dict: 
+      json_value = json.loads(self.value)
     else:
-      query = text(""" Select RXCUI, STR from "rxnormDirty".rxnconso where SAB = 'RXNORM' and TTY <> 'SY'  
-      and (RXCUI in (select RXCUI from "rxnormDirty".rxnconso where RXAUI in (select RXAUI1 from "rxnormDirty".rxnrel where REL = :rel and RXAUI2 in :value)))""") 
-
-    query = query.bindparams(bindparam('value', expanding=True))
-
-    value = self.value[4:].split(',') 
-
-    results_data = conn.execute(query, {
-      'value': value, 
-      'rel': self.property
-    })
-
-    results = [Code(self.fhir_system, self.terminology_version.version, x.rxcui, x.str) for x in results_data]
-    self.results = set(results)
-
-  def rxnorm_relationship_type(self):
-    conn = get_db()
-    if self.value[:4] == 'CUI:':
-      query = text(""" Select RXCUI, STR from "rxnormDirty".rxnconso where SAB = 'RXNORM' and TTY <> 'SY'  
-      and (RXCUI in (select RXCUI from "rxnormDirty".rxnconso where RXCUI in (select RXCUI1 from "rxnormDirty".rxnrel where RELA = :rel and RXCUI2 in :value)))""") 
-    else:
-      query = text(""" Select RXCUI, STR from "rxnormDirty".rxnconso where SAB = 'RXNORM' and TTY <> 'SY'  
-      and (RXCUI in (select RXCUI from "rxnormDirty".rxnconso where RXAUI in (select RXAUI1 from "rxnormDirty".rxnrel where RELA = :rel and RXAUI2 in :value)))""") 
-
-    query = query.bindparams(bindparam('value', expanding=True))
-
-    value = self.value[4:].split(',') 
-
-    results_data = conn.execute(query, {
-      'value': value, 
-      'rel': self.property
-    })
-
-    results = [Code(self.fhir_system, self.terminology_version.version, x.rxcui, x.str) for x in results_data]
-    self.results = set(results)
+      json_value = self.value
+    term_type = json_value.get('term_type')
+    payload = {'tty': term_type}
+    active_concepts_by_TTY_request = requests.get(f'{RXNORM_BASE_URL}allconcepts.json?', params=payload)
+    results = active_concepts_by_TTY_request.json()
+    results_list = results.get("minConceptGroup").get("minConcept")
+    final_results = [Code(self.fhir_system, self.terminology_version.version, x.get("rxcui"), x.get("name")) for x in results_list]
+    self.results = set(final_results)     
 
 class LOINCRule(VSRule):
 

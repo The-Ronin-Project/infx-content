@@ -12,6 +12,7 @@ from app.models.value_sets import *
 from app.models.concept_maps import *
 from app.models.surveys import *
 from werkzeug.exceptions import HTTPException
+import sys
 
 # Configure the logger when the application is imported. This ensures that
 # everything below uses the same configured logger.
