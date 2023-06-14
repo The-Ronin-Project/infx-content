@@ -3,7 +3,7 @@ name: INFX Content API Deployment to K8s PROD
 on:
   workflow_dispatch:
   push:
-    branches: [master, PLAT-311-upgrade-image-push-logic]
+    branches: [master]
 
 jobs:
   infx-content_test:
