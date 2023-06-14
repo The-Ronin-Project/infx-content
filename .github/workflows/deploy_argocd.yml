@@ -3,7 +3,7 @@ name: INFX Content API Deployment to K8s PROD
 on:
   workflow_dispatch:
   push:
-    branches: [master]
+    branches: [master, PLAT-311-upgrade-image-push-logic]
 
 jobs:
   infx-content_test:
@@ -12,12 +12,12 @@ jobs:
       codecov-token: ${{ secrets.INFX_API_CODECOV_TOKEN }}
 
   image-push:
-    uses: projectronin/github/.github/workflows/image_push.yml@master
+    uses: projectronin/github/.github/workflows/image_push_nexus.yml@image_push_nexus/v2
     with:
       image-tag: ${{ github.sha }}
     secrets:
-      username: ${{ secrets.ACR_USERNAME }}
-      password: ${{ secrets.ACR_PASSWORD }}
+      username: ${{ secrets.NEXUS_DOCKER_USERNAME }}
+      password: ${{ secrets.NEXUS_DOCKER_PASSWORD }}
 
   argocd_prod:
     uses: projectronin/github/.github/workflows/argocd_deploy.yml@master
